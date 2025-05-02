@@ -1,20 +1,38 @@
-name: Build OpenWrt Package
-on: [push]
+name: Build luci-app-netaccess
+
+on:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Compile for x86_64
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup OpenWrt SDK
       run: |
-        docker run --rm -v $(pwd):/src openwrtorg/sdk:x86_64-22.03.3 /bin/bash -c "
-          cd /src && \
-          cp -r package /home/build/openwrt/ && \
-          ./scripts/feeds update -a && \
-          ./scripts/feeds install -a && \
-          make package/luci-app-netaccess/compile
-        "
+        git clone https://github.com/openwrt/openwrt.git openwrt
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Prepare plugin
+      run: |
+        mkdir -p openwrt/package/luci-app-netaccess
+        cp -r * openwrt/package/luci-app-netaccess/
+        cd openwrt
+        echo -e "CONFIG_PACKAGE_luci-app-netaccess=y" > .config
+        make defconfig
+
+    - name: Build package
+      run: |
+        cd openwrt
+        make package/luci-app-netaccess/compile V=s -j$(nproc)
+
     - name: Upload IPK
       uses: actions/upload-artifact@v3
       with:
-        path: bin/packages/x86_64/base/luci-app-netaccess*.ipk
+        name: luci-app-netaccess-ipk
+        path: |
+          openwrt/bin/packages/**/luci-app-netaccess_*.ipk
