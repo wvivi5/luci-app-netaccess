@@ -1,0 +1,11 @@
+msgid "Whitelist Devices"
+msgstr "白名单设备"
+
+msgid "MAC Address"
+msgstr "MAC 地址"
+
+msgid "Comment"
+msgstr "备注"
+
+msgid "Whitelist Internet Control"
+msgstr "白名单上网控制"
