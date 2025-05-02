@@ -1,0 +1,20 @@
+name: Build OpenWrt Package
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Compile for x86_64
+      run: |
+        docker run --rm -v $(pwd):/src openwrtorg/sdk:x86_64-22.03.3 /bin/bash -c "
+          cd /src && \
+          cp -r package /home/build/openwrt/ && \
+          ./scripts/feeds update -a && \
+          ./scripts/feeds install -a && \
+          make package/luci-app-netaccess/compile
+        "
+    - name: Upload IPK
+      uses: actions/upload-artifact@v3
+      with:
+        path: bin/packages/x86_64/base/luci-app-netaccess*.ipk
